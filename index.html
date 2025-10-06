@@ -1,654 +1,837 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>ระบบจัดการข้อมูลคนไข้คลินิก</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --muted: #6b7280;
+            --accent: #0b73ff;
+            --danger: #e02424;
+            --glass: rgba(255, 255, 255, 0.7);
+            --radius: 12px;
+            --shadow: 0 6px 18px rgba(12, 20, 30, 0.06);
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
         body {
-            font-family: 'Sarabun', sans-serif;
-            background: #f8fafc;
+            height: 100%
+        }
+
+        body {
+            font-family: 'Sarabun', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
             margin: 0;
-            min-height: 100vh;
+            background: linear-gradient(180deg, var(--bg), #eef3fb 120%);
+            color: #12202b;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding: 28px;
+        }
+
+        /* App layout */
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+            border: 1px solid #e6eefb;
+            position: sticky;
+            top: 28px;
+            height: calc(100vh - 56px);
+            overflow: auto;
+        }
+
+        .brand {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px
+        }
+
+        .logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), #2aa6ff);
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            color: white;
+            font-weight: 700
         }
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            z-index: -1;
+        .brand h2 {
+            margin: 0;
+            font-size: 16px
         }
 
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 35px 40px;
-            width: 95%;
-            max-width: 850px;
+        .muted {
+            color: var(--muted);
+            font-size: 13px
         }
 
-        h1 {
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 25px;
+        .nav {
+            margin-top: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px
         }
 
-        .tabs {
+        .nav button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        .nav button.active {
+            background: #eef8ff;
+            border-color: #d8edff
+        }
+
+        /* Main card */
+        .main {
+            background: transparent;
+            padding: 0;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+            border: 1px solid #e6eefb
+        }
+
+        header.card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px
+        }
+
+        header .title {
+            display: flex;
+            flex-direction: column
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 18px
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        /* Controls row */
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap
+        }
+
+        .search {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid #e9f0ff;
+            background: linear-gradient(180deg, #fff, #fbfdff);
+        }
+
+        .search input {
+            border: 0;
+            outline: 0;
+            font-size: 14px;
+            width: 100%;
+            padding: 6px
+        }
+
+        .btn {
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 0;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #e6eefb
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white
+        }
+
+        /* file input styled */
+        .file-input {
             display: flex;
             gap: 8px;
-            margin-bottom: 20px;
+            align-items: center
         }
 
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px 0;
+        .file-input input[type=file] {
+            display: none
+        }
+
+        .file-label {
+            font-weight: 600;
+            padding: 9px 12px;
             border-radius: 10px;
-            background: #e8edf3;
-            cursor: pointer;
-            transition: .25s;
-        }
-
-        .tab.active {
-            background: #007bff;
-            color: #fff;
-            box-shadow: 0 4px 10px rgba(0, 123, 255, .3);
-        }
-
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        input,
-        button {
-            width: 100%;
-            max-width: 500px;
-            margin: 8px auto;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid #ccd6e0;
-            font-size: 15px;
-        }
-
-        button {
-            background: #007bff;
-            color: #fff;
-            border: none;
+            border: 1px dashed #dbeefa;
+            background: #fbfdff;
             cursor: pointer;
         }
 
-        button:hover {
-            background: #0056b3;
+        /* stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 12px
         }
 
-        button:active {
-            transform: scale(.97);
+        .stat {
+            padding: 12px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #fff, #fbfdff);
+            border: 1px solid #eef6ff;
+            text-align: center
         }
 
-        #saveExcelBtn {
-            width: 300px;
+        .stat .big {
+            font-size: 20px;
+            font-weight: 700
+        }
+
+        .stat .label {
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        /* table */
+        .table-wrap {
+            margin-top: 14px;
+            overflow: auto
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 15px;
+            font-size: 14px
         }
 
         th,
         td {
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid #e5e9ef;
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f1f6fb
         }
 
         th {
-            background: #007bff;
-            color: #fff;
-        }
-
-        tr:nth-child(even) {
-            background: #f9fbff;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600
         }
 
         tr:hover td {
-            background: #eef5ff;
+            background: #fbfdff
         }
 
-        #paginationControls,
-        #editPaginationControls {
-            display: flex !important;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 15px;
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end
         }
 
-        #paginationControls button,
-        #editPaginationControls button {
-            width: auto !important;
-            /* prevent stretching */
-            min-width: 350px;
-            /* small but readable */
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background-color: #ffffff;
-            color: #333;
-            font-size: 14px;
-            font-family: 'Segoe UI', sans-serif;
-            cursor: pointer;
-            /*transition: background-color 0.2s ease, color 0.2s ease;*/
+        .pill {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #eef6ff;
+            background: #fff;
+            font-weight: 600
         }
 
-        #paginationControls button:disabled,
-        #editPaginationControls button:disabled {
-            background-color: #f3f3f3;
-            color: #999;
-            cursor: not-allowed;
-        }
-
-        #paginationControls button:not(:disabled):hover,
-        #editPaginationControls button:not(:disabled):hover {
-            background-color: #007bff;
-            color: #fff;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-card {
-            background: #f6f9ff;
-            border: 1px solid #e3e9f2;
-            border-radius: 12px;
-            padding: 18px;
-            text-align: center;
-        }
-
-        /* --- Modal Animation --- */
+        /* modal (no transition on buttons) */
         .modal {
-            display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(6px);
-            justify-content: center;
+            display: none;
             align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            justify-content: center;
+            background: rgba(6, 18, 30, 0.4);
+            z-index: 50
         }
 
         .modal.show {
+            display: flex
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 438px;
+            background: var(--card);
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 14px 40px rgba(10, 20, 40, 0.2)
+        }
+
+        .form-row {
             display: flex;
-            opacity: 1;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px
         }
 
-        .modal-content {
-            background: #fff;
-            padding: 20px 30px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-            transform: scale(0.9);
-            opacity: 0;
-            transition: all 0.25s ease;
+        input,
+        select {
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid #e8f1ff;
+            background: linear-gradient(180deg, #fff, #fbfdff);
+            min-width: 0
         }
 
-        .modal.show .modal-content {
-            transform: scale(1);
-            opacity: 1;
+        input:focus {
+            outline: 3px solid rgba(11, 115, 255, 0.12)
         }
 
-        #addModal .modal-content input,
-        #editModal .modal-content input {
-            display: block;
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
-            margin: 8px 0;
-            padding: 12px 16px;
-            border: 1px solid #ccd6e0;
-            border-radius: 10px;
-            font-size: 16px;
-            text-align: center;
+        /* small screens */
+        @media (max-width:920px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                height: auto
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr)
+            }
         }
 
-        #addModal .modal-content button,
-        #editModal .modal-content button {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 16px;
-            margin-top: 8px;
-            cursor: pointer;
-            transition: 0.2s;
+        @media (max-width:520px) {
+            .stats {
+                grid-template-columns: 1fr
+            }
+
+            .controls {
+                flex-direction: column
+            }
+
+            .actions {
+                justify-content: flex-start
+            }
         }
 
-        #addModal #saveAddBtn,
-        #editModal #saveEditBtn {
-            background-color: #007bff;
-            color: white;
-            border: none;
+        /* instant darken on press/hover—no CSS transition */
+        button,
+        .file-label {
+            transition: none
         }
 
-        #addModal #saveAddBtn:hover,
-        #editModal #saveEditBtn:hover {
-            background-color: #0056b3;
-        }
-
-        #addModal #cancelAddBtn,
-        #editModal #cancelEditBtn {
-            background-color: #e0e0e0;
-            color: #333;
-            border: none;
-        }
-
-        #addModal #cancelAddBtn:hover,
-        #editModal #cancelEditBtn:hover {
-            background-color: #c7c7c7;
+        button:active,
+        button:hover {
+            filter: brightness(0.92)
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>🏥 ระบบจัดการข้อมูลคนไข้คลินิก</h1>
-
-        <div class="tabs">
-            <div class="tab active" data-tab="upload">📂 อัปโหลด / ดูรายชื่อ</div>
-            <div class="tab" data-tab="add">➕ เพิ่ม / แก้ไข / ลบ</div>
-            <div class="tab" data-tab="stats">📊 สถิติ</div>
-        </div>
-
-        <div id="upload" class="section active">
-            <div class="button-group">
-                <input type="file" id="fileInput" accept=".xlsx,.xls">
-                <button id="saveExcelBtn">💾 บันทึกข้อมูลเป็น Excel (.xlsx)</button>
-            </div>
-            <input style="display: flex; gap: 10px; align-items: center;" type="text" id="searchInput" placeholder="🔍 ค้นหาจากชื่อหรือรหัสผู้ป่วย...">
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>รหัสผู้ป่วย</th>
-                        <th>ชื่อ - สกุล</th>
-                        <th>อายุ</th>
-                        <th>เบอร์โทรศัพท์</th>
-                        <th>การจัดการ</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            <div id="paginationControls"></div>
-        </div>
-
-        <div id="add" class="section">
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                <input type="text" id="editSearchInput" placeholder="🔍 ค้นหาชื่อหรือรหัสในหน้านี้..." style="flex: 1;">
-                <button id="openAddModalBtn" style="width:400px; padding:10px 20px;">➕ เพิ่มข้อมูลใหม่</button>
+    <div class="app">
+        <!-- SIDEBAR -->
+        <aside class="sidebar card" aria-label="เมนูหลัก">
+            <div class="brand">
+                <div class="logo">PD</div>
+                <div>
+                    <h2>ระบบคนไข้คลินิก</h2>
+                    <div class="muted">จัดการรายชื่อคนไข้ / ส่งออก / สถิติ</div>
+                </div>
             </div>
 
-            <table id="editTable">
-                <thead>
-                    <tr>
-                        <th>รหัสผู้ป่วย</th>
-                        <th>ชื่อ - สกุล</th>
-                        <th>อายุ</th>
-                        <th>เบอร์โทรศัพท์</th>
-                        <th>การจัดการ</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            <div id="editPaginationControls"></div>
-        </div>
+            <nav class="nav" role="tablist" aria-label="แถบเมนู">
+                <button id="tab-list" class="active" role="tab" aria-controls="panel-list">📂 หน้าหลัก</button>
+                <button style="display: none;" id="tab-edit" role="tab" aria-controls="panel-edit"></button>
+                <button id="tab-stats" role="tab" aria-controls="panel-stats">📊 สถิติ</button>
+            </nav>
 
-        <div id="addModal" class="modal">
-            <div class="modal-content">
-                <h3>➕ เพิ่มข้อมูลคนไข้ใหม่</h3>
-                <input type="text" id="addId" placeholder="รหัสผู้ป่วย (ถ้าเว้นไว้จะสร้างอัตโนมัติ)">
-                <input type="text" id="addName" placeholder="ชื่อ - สกุล">
-                <input type="number" id="addAge" placeholder="อายุ">
-                <input type="text" id="addPhone" placeholder="เบอร์โทรศัพท์">
-                <button id="saveAddBtn">💾 บันทึก</button>
-                <button id="cancelAddBtn">❌ ยกเลิก</button>
+            <hr style="margin:12px 0;border:0;border-top:1px solid #f1f6fb">
+            <div class="muted" style="font-size:13px">คู่มือสั้น</div>
+            <ol style="padding-left:18px;margin:8px 0 0 0;color:var(--muted);font-size:13px">
+                <li>อัปโหลดไฟล์ .xlsx (sheet แรกจะถูกอ่าน)</li>
+                <li>ค้นหา, แก้ไข หรือส่งออกรายชื่อ</li>
+                <li>ปุ่มลบจะลบข้อมูลทันที</li>
+            </ol>
+
+            <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+                <button id="exportBtn" class="btn btn-ghost" title="บันทึกเป็น Excel">💾 ส่งออก</button>
+                <label class="file-label" for="fileInput">📁 อัปโหลด</label>
+                <input id="fileInput" type="file" accept=".xlsx,.xls" aria-label="อัปโหลดไฟล์ Excel">
             </div>
-        </div>
 
+            <div style="margin-top:18px;font-size:13px;color:var(--muted)">สร้างโดย PanyaDev</div>
+        </aside>
 
-        <div id="stats" class="section">
-            <h3 style="text-align:center;">📈 สถิติคนไข้</h3>
-            <div class="stats-grid">
-                <div class="stat-card" id="totalPatients">จำนวนคนไข้ทั้งหมด: 0</div>
-                <div class="stat-card" id="averageAge">อายุเฉลี่ย: -</div>
-                <div class="stat-card" id="oldest">อายุมากที่สุด: -</div>
-                <div class="stat-card" id="youngest">อายุน้อยที่สุด: -</div>
-                <div class="stat-card" id="missingPhone">ไม่มีเบอร์โทร: 0 คน</div>
-            </div>
-        </div>
+        <!-- MAIN -->
+        <main class="main">
+            <!-- LIST PANEL -->
+            <section id="panel-list" class="card" role="tabpanel">
+                <header>
+                    <div class="title">
+                        <h1>📂 หน้าหลัก</h1>
+                        <p class="muted">ค้นหาและจัดการข้อมูลคนไข้ได้อย่างรวดเร็ว</p>
+                    </div>
+                </header>
+
+                <div class="controls">
+                    <div class="search" role="search">
+                        <svg style="fill:#368dff;" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="25"
+                            height="20" viewBox="0 0 50 50">
+                            <path
+                                d="M 21 3 C 11.601563 3 4 10.601563 4 20 C 4 29.398438 11.601563 37 21 37 C 24.355469 37 27.460938 36.015625 30.09375 34.34375 L 42.375 46.625 L 46.625 42.375 L 34.5 30.28125 C 36.679688 27.421875 38 23.878906 38 20 C 38 10.601563 30.398438 3 21 3 Z M 21 7 C 28.199219 7 34 12.800781 34 20 C 34 27.199219 28.199219 33 21 33 C 13.800781 33 8 27.199219 8 20 C 8 12.800781 13.800781 7 21 7 Z">
+                            </path>
+                        </svg> <input id="searchInput" placeholder="ค้นหาจากชื่อ / รหัส / เบอร์โทร" aria-label="ค้นหา">
+                    </div>
+
+                    <div class="file-input">
+                        <label class="file-label" id="dropLabel">ลากไฟล์มาวาง หรือคลิกเพื่อเลือก</label>
+                    </div>
+
+                    <div style="display:flex;gap:8px">
+                        <button id="addBtn" class="btn btn-primary">➕ เพิ่มคนไข้</button>
+                        <button id="clearBtn" class="btn btn-ghost">รีเซ็ตข้อมูล</button>
+                    </div>
+                </div>
+
+                <div class="stats" aria-hidden="false">
+                    <div class="stat">
+                        <div class="big" id="stat-total">0</div>
+                        <div class="label">จำนวนคนไข้</div>
+                    </div>
+                    <div class="stat">
+                        <div class="big" id="stat-avg">—</div>
+                        <div class="label">อายุเฉลี่ย</div>
+                    </div>
+                    <div class="stat">
+                        <div class="big" id="stat-old">—</div>
+                        <div class="label">อายุมากที่สุด</div>
+                    </div>
+                    <div class="stat">
+                        <div class="big" id="stat-young">—</div>
+                        <div class="label">อายุน้อยที่สุด</div>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table id="dataTable" role="table" aria-label="ตารางคนไข้">
+                        <thead>
+                            <tr>
+                                <th>รหัส</th>
+                                <th>ชื่อ - สกุล</th>
+                                <th>อายุ</th>
+                                <th>เบอร์โทร</th>
+                                <th style="text-align:right">การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+                    <div class="muted" id="pager-info">หน้า 0 จาก 0</div>
+                    <div style="display:flex;gap:8px"><button id="prevPage" class="btn btn-ghost">◀
+                            ก่อนหน้า</button><button id="nextPage" class="btn btn-ghost">ถัดไป ▶</button></div>
+                </div>
+            </section>
+
+            <!-- EDIT PANEL -->
+            <section id="panel-edit" class="card" style="display:none" role="tabpanel">
+                <header>
+                    <h1>➕ เพิ่ม / แก้ไข</h1>
+                    <p class="muted">เพิ่มหรือแก้ไขข้อมูลคนไข้แบบเรียลไทม์</p>
+                </header>
+                <div style="margin-top:12px">
+                    <button id="openAddModal" class="btn btn-primary">➕ เพิ่มคนไข้ใหม่</button>
+                </div>
+
+                <div style="margin-top:14px">
+                    <table id="editTable">
+                        <thead>
+                            <tr>
+                                <th>รหัส</th>
+                                <th>ชื่อ - สกุล</th>
+                                <th>อายุ</th>
+                                <th>เบอร์โทร</th>
+                                <th style="text-align:right">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- STATS PANEL -->
+            <section id="panel-stats" class="card" style="display:none" role="tabpanel">
+                <header>
+                    <h1>📊 สถิติรายละเอียด</h1>
+                    <p class="muted">สรุปข้อมูลเชิงสถิติและรายงานอย่างง่าย</p>
+                </header>
+                <div style="margin-top:12px">
+                    <div class="muted">จำนวนคนไข้: <strong id="stat-total-2">0</strong></div>
+                    <div class="muted" style="margin-top:8px">จำนวนที่ไม่มีเบอร์โทร: <strong
+                            id="stat-missing">0</strong></div>
+                    <div style="margin-top:12px"><button id="exportCsv" class="btn btn-primary">ส่งออก CSV</button>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <h3>✏️ แก้ไขข้อมูลคนไข้</h3>
-            <input type="text" id="editId" readonly>
-            <input type="text" id="editName" placeholder="ชื่อ - สกุล">
-            <input type="number" id="editAge" placeholder="อายุ">
-            <input type="text" id="editPhone" placeholder="เบอร์โทรศัพท์">
-            <button id="saveEditBtn">💾 บันทึก</button>
-            <button id="cancelEditBtn">❌ ยกเลิก</button>
+    <!-- MODAL -->
+    <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-card">
+            <h3 id="modalTitle">เพิ่มคนไข้ใหม่</h3>
+            <div class="form-row">
+                <input id="inputId" placeholder="รหัส (เว้นว่างเพื่อสร้างอัตโนมัติ)">
+                <input id="inputName" placeholder="ชื่อ - สกุล">
+            </div>
+            <div class="form-row">
+                <input id="inputAge" type="number" placeholder="อายุ">
+                <input id="inputPhone" placeholder="เบอร์โทรศัพท์">
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+                <button id="cancelModal" class="btn btn-ghost">ยกเลิก</button>
+                <button id="saveModal" class="btn btn-primary">บันทึก</button>
+            </div>
         </div>
     </div>
 
     <script>
+        // --- state ---
         let patientData = [];
+        const rowsPerPage = 50;
         let currentPage = 1;
         let currentEditPage = 1;
-        const rowsPerPage = 100;
+        let filtered = null;
 
-        document.querySelectorAll(".tab").forEach(tab => {
-            tab.addEventListener("click", () => {
-                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-                document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-                tab.classList.add("active");
-                document.getElementById(tab.dataset.tab).classList.add("active");
-                if (tab.dataset.tab === "stats") updateStats();
-                if (tab.dataset.tab === "add") renderEditTable();
-            });
+        // --- elements ---
+        const $ = sel => document.querySelector(sel);
+        const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+        const fileInput = $('#fileInput');
+        const dropLabel = $('#dropLabel');
+        const dataTableBody = $('#dataTable tbody');
+        const editTableBody = $('#editTable tbody');
+
+        // tabs
+        const tabList = $('#tab-list');
+        const tabEdit = $('#tab-edit');
+        const tabStats = $('#tab-stats');
+        const panels = {
+            list: $('#panel-list'),
+            edit: $('#panel-edit'),
+            stats: $('#panel-stats')
+        };
+
+        // modal
+        const modal = $('#modal');
+        const modalTitle = $('#modalTitle');
+        const inputId = $('#inputId');
+        const inputName = $('#inputName');
+        const inputAge = $('#inputAge');
+        const inputPhone = $('#inputPhone');
+        const saveModal = $('#saveModal');
+
+        // stats
+        const statTotal = $('#stat-total');
+        const statAvg = $('#stat-avg');
+        const statOld = $('#stat-old');
+        const statYoung = $('#stat-young');
+        const statMissing = $('#stat-missing');
+        const statTotal2 = $('#stat-total-2');
+
+        // controls
+        const searchInput = $('#searchInput');
+        const addBtn = $('#addBtn');
+        const openAddModal = $('#openAddModal');
+        const prevPage = $('#prevPage');
+        const nextPage = $('#nextPage');
+        const pagerInfo = $('#pager-info');
+
+        // exports
+        const exportBtn = $('#exportBtn');
+        const exportCsvBtn = $('#exportCsv');
+
+        // --- utilities ---
+        const sanitize = v => (v === undefined || v === null || v === '') ? '—' : String(v);
+        const generateId = () => String(Math.floor(10000 + Math.random() * 90000));
+        const debounce = (fn, delay = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), delay); }; };
+
+        // --- set active tab ---
+        function setActiveTab(tab) {
+            [tabList, tabEdit, tabStats].forEach(b => b.classList.remove('active'));
+            tab.classList.add('active');
+            panels.list.style.display = panels.edit.style.display = panels.stats.style.display = 'none';
+            if (tab === tabList) panels.list.style.display = 'block';
+            if (tab === tabEdit) panels.edit.style.display = 'block';
+            if (tab === tabStats) panels.stats.style.display = 'block';
+            if (tab === tabStats) updateStats();
+            if (tab === tabList) renderTable();
+            if (tab === tabEdit) renderEditTable();
+        }
+
+        // --- tab events ---
+        tabList.onclick = () => setActiveTab(tabList);
+        tabEdit.onclick = () => setActiveTab(tabEdit);
+        tabStats.onclick = () => setActiveTab(tabStats);
+
+        // --- file handling ---
+        ['dragenter', 'dragover'].forEach(ev => {
+            dropLabel.addEventListener(ev, e => { e.preventDefault(); dropLabel.textContent = 'ปล่อยเพื่ออัปโหลดไฟล์ .xlsx'; });
         });
+        ['dragleave', 'dragend', 'drop'].forEach(ev => {
+            dropLabel.addEventListener(ev, e => { e.preventDefault(); dropLabel.textContent = '⇧ ลากไฟล์มาวาง หรือคลิกเพื่อเลือก'; });
+        });
+        dropLabel.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+        dropLabel.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); });
 
-        document.getElementById("fileInput").addEventListener("change", e => {
-            const file = e.target.files[0]; if (!file) return;
+        function handleFile(file) {
             const reader = new FileReader();
             reader.onload = evt => {
-                const data = new Uint8Array(evt.target.result);
-                const workbook = XLSX.read(data, { type: "array" });
-                const sheet = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheet];
-                patientData = XLSX.utils.sheet_to_json(worksheet);
-                currentPage = 1; currentEditPage = 1;
-                renderTable(patientData);
-                renderEditTable();
-                updateStats();
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheet];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+                    patientData = rows.map(r => ({
+                        'รหัสผู้ป่วย': r['รหัสผู้ป่วย'] ?? r['id'] ?? r['รหัส'] ?? generateId(),
+                        'ชื่อ - สกุล': r['ชื่อ - สกุล'] ?? r['name'] ?? '—',
+                        'อายุ': r['อายุ'] ?? r['age'] ?? '—',
+                        'เบอร์โทรศัพท์': r['เบอร์โทรศัพท์'] ?? r['phone'] ?? '—'
+                    }));
+                    currentPage = 1; currentEditPage = 1; filtered = null;
+                    renderTable(); renderEditTable(); updateStats(); setActiveTab(tabList);
+                } catch (err) { alert('ไฟล์ไม่ถูกต้อง หรืออ่านไม่ได้'); console.error(err); }
             };
             reader.readAsArrayBuffer(file);
-        });
+        }
 
-        const addModal = document.getElementById("addModal");
-        document.getElementById("openAddModalBtn").addEventListener("click", () => {
-            addModal.classList.add("show");
-            ['addId', 'addName', 'addAge', 'addPhone'].forEach(id => document.getElementById(id).value = "");
-        });
-
-        document.getElementById("cancelAddBtn").addEventListener("click", () => {
-            addModal.classList.remove("show");
-        });
-
-        document.getElementById("saveAddBtn").addEventListener("click", () => {
-            const id = document.getElementById("addId").value.trim() || generatePatientID();
-            const name = document.getElementById("addName").value.trim();
-            const age = document.getElementById("addAge").value.trim();
-            const phone = document.getElementById("addPhone").value.trim();
-            if (!name) { alert("กรุณากรอกชื่อ - สกุล"); return; }
-
-            const exists = patientData.some(p => String(p["รหัสผู้ป่วย"]) === id);
-            if (exists) {
-                alert("⚠️ รหัสผู้ป่วยนี้มีอยู่แล้ว!");
-                return;
-            }
-
-            patientData.push({
-                "รหัสผู้ป่วย": id,
-                "ชื่อ - สกุล": name,
-                "อายุ": age || "—",
-                "เบอร์โทรศัพท์": phone || "—"
-            });
-
-            alert("✅ เพิ่มข้อมูลคนไข้ใหม่สำเร็จ!");
-            modal.classList.remove("show");
-            renderTable(patientData);
-            renderEditTable();
-            updateStats();
-        });
-        function generatePatientID() { return Math.floor(10000 + Math.random() * 90000); }
-
-        document.getElementById("editSearchInput").addEventListener("input", debounce(e => {
-            const q = e.target.value.toLowerCase();
-            const filtered = patientData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
-            currentEditPage = 1;
-            renderFilteredEditTable(filtered);
-        }));
-
-        function renderTable(data) {
-            const head = document.querySelector("#dataTable thead");
-            const body = document.querySelector("#dataTable tbody");
-            head.innerHTML = ""; body.innerHTML = "";
-
-            if (!data.length) {
-                body.innerHTML = "<tr><td colspan='4'>ยังไม่มีข้อมูลคนไข้</td></tr>";
-                document.getElementById("paginationControls").innerHTML = "";
-                return;
-            }
-            const headers = ["รหัสผู้ป่วย", "ชื่อ - สกุล", "อายุ", "เบอร์โทรศัพท์"];
-            const headerRow = document.createElement("tr");
-            headers.forEach(h => { const th = document.createElement("th"); th.textContent = h; headerRow.appendChild(th); });
-            head.appendChild(headerRow);
-
+        // --- shared table renderer ---
+        function renderTable(isEdit = false) {
+            const data = filtered || patientData;
             const start = (currentPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             const pageData = data.slice(start, end);
 
-            const fragment = document.createDocumentFragment();
-            pageData.forEach(row => {
-                const tr = document.createElement("tr");
-                headers.forEach(h => {
-                    const td = document.createElement("td");
-                    td.textContent = row[h] || "—";
-                    tr.appendChild(td);
-                });
-                fragment.appendChild(tr);
-            });
-            body.appendChild(fragment);
-            renderPaginationControls(data.length);
-        }
-
-        function renderPaginationControls(totalRows) {
-            const totalPages = Math.ceil(totalRows / rowsPerPage);
-            const container = document.getElementById("paginationControls");
-            container.innerHTML = "";
-
-            if (totalPages <= 1) return;
-
-            const prevBtn = createBtn("<", currentPage === 1, () => { if (currentPage > 1) { currentPage--; renderTable(patientData); } });
-            const nextBtn = createBtn(">", currentPage === totalPages, () => { if (currentPage < totalPages) { currentPage++; renderTable(patientData); } });
-            const pageLabel = createLabel(`หน้า ${currentPage} จาก ${totalPages}`);
-
-            container.append(prevBtn, pageLabel, nextBtn);
-        }
-
-        function createBtn(label, disabled, onClick) {
-            const btn = document.createElement("button");
-            btn.textContent = label;
-            btn.disabled = disabled;
-            btn.onclick = onClick;
-            return btn;
-        }
-        function createLabel(text) {
-            const span = document.createElement("span");
-            span.textContent = text;
-            span.style.padding = "6px 14px";
-            span.style.border = "1px solid #ddd";
-            span.style.borderRadius = "6px";
-            span.style.background = "#f9f9f9";
-            span.style.minWidth = "120px";
-            span.style.display = "inline-block";
-            return span;
-        }
-
-        function debounce(fn, delay = 300) {
-            let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
-        }
-        document.getElementById("searchInput").addEventListener("input", debounce(e => {
-            const q = e.target.value.toLowerCase();
-            const filtered = patientData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
-            currentPage = 1;
-            renderTable(filtered);
-        }));
-
-        function renderFilteredEditTable(data) {
-            const tbody = document.querySelector("#editTable tbody");
-            tbody.innerHTML = "";
-
-            if (!data.length) {
-                tbody.innerHTML = "<tr><td colspan='5'>ไม่พบข้อมูลที่ค้นหา</td></tr>";
-                document.getElementById("editPaginationControls").innerHTML = "";
+            const tbody = isEdit ? editTableBody : dataTableBody;
+            tbody.innerHTML = '';
+            if (!pageData.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">ไม่มีข้อมูล</td></tr>';
+                if (!isEdit) pagerInfo.textContent = 'หน้า 0 จาก 0';
                 return;
             }
 
+            pageData.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+        <td>${sanitize(p['รหัสผู้ป่วย'])}</td>
+        <td>${sanitize(p['ชื่อ - สกุล'])}</td>
+        <td>${sanitize(p['อายุ'])}</td>
+        <td>${sanitize(p['เบอร์โทรศัพท์'])}</td>
+        <td style='text-align:right' class='actions'>
+          <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='edit'>✏️ แก้ไข</button>
+          <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='delete'>🗑️ ลบ</button>
+        </td>`;
+                tbody.appendChild(tr);
+            });
+
+            if (!isEdit) {
+                const totalPages = Math.max(1, Math.ceil(data.length / rowsPerPage));
+                pagerInfo.textContent = `หน้า ${currentPage} จาก ${totalPages}`;
+            }
+        }
+
+        // --- renderEditTable (with pagination) ---
+        function renderEditTable() {
+            const data = patientData;
             const start = (currentEditPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             const pageData = data.slice(start, end);
 
-            const frag = document.createDocumentFragment();
-            pageData.forEach(p => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-      <td>${p["รหัสผู้ป่วย"] || "—"}</td>
-      <td>${p["ชื่อ - สกุล"] || "—"}</td>
-      <td>${p["อายุ"] || "—"}</td>
-      <td>${p["เบอร์โทรศัพท์"] || "—"}</td>
-      <td>
-        <button onclick="editPatient('${p["รหัสผู้ป่วย"]}')">✏️ แก้ไข</button>
-        <button onclick="deletePatient('${p["รหัสผู้ป่วย"]}')">🗑️ ลบ</button>
-      </td>`;
-                frag.appendChild(tr);
-            });
-            tbody.appendChild(frag);
-        }
-
-
-        function renderEditTable() {
-            const tbody = document.querySelector("#editTable tbody");
-            tbody.innerHTML = "";
-
-            if (!patientData.length) {
-                tbody.innerHTML = "<tr><td colspan='5'>ยังไม่มีข้อมูลคนไข้</td></tr>";
-                document.getElementById("editPaginationControls").innerHTML = "";
+            editTableBody.innerHTML = '';
+            if (!pageData.length) {
+                editTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">ไม่มีข้อมูล</td></tr>';
                 return;
             }
 
-            const start = (currentEditPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = patientData.slice(start, end);
-
-            const frag = document.createDocumentFragment();
             pageData.forEach(p => {
-                const tr = document.createElement("tr");
+                const tr = document.createElement('tr');
                 tr.innerHTML = `
-      <td>${p["รหัสผู้ป่วย"] || "—"}</td>
-      <td>${p["ชื่อ - สกุล"] || "—"}</td>
-      <td>${p["อายุ"] || "—"}</td>
-      <td>${p["เบอร์โทรศัพท์"] || "—"}</td>
-      <td>
-        <button onclick="editPatient('${p["รหัสผู้ป่วย"]}')">✏️ แก้ไข</button>
-        <button onclick="deletePatient('${p["รหัสผู้ป่วย"]}')">🗑️ ลบ</button>
-      </td>`;
-                frag.appendChild(tr);
+        <td>${sanitize(p['รหัสผู้ป่วย'])}</td>
+        <td>${sanitize(p['ชื่อ - สกุล'])}</td>
+        <td>${sanitize(p['อายุ'])}</td>
+        <td>${sanitize(p['เบอร์โทรศัพท์'])}</td>
+        <td style='text-align:right' class='actions'>
+          <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='edit'>✏️ แก้ไข</button>
+          <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='delete'>🗑️ ลบ</button>
+        </td>`;
+                editTableBody.appendChild(tr);
             });
-            tbody.appendChild(frag);
-            renderEditPaginationControls(patientData.length);
         }
 
-        function renderEditPaginationControls(totalRows) {
-            const totalPages = Math.ceil(totalRows / rowsPerPage);
-            const container = document.getElementById("editPaginationControls");
-            container.innerHTML = "";
-            if (totalPages <= 1) return;
-
-            const prevBtn = createBtn("<", currentEditPage === 1, () => { if (currentEditPage > 1) { currentEditPage--; renderEditTable(); } });
-            const nextBtn = createBtn(">", currentEditPage === totalPages, () => { if (currentEditPage < totalPages) { currentEditPage++; renderEditTable(); } });
-            const pageLabel = createLabel(`หน้า ${currentEditPage} จาก ${totalPages}`);
-
-            container.append(prevBtn, pageLabel, nextBtn);
-        }
-
-        function deletePatient(id) {
-            patientData = patientData.filter(p => String(p["รหัสผู้ป่วย"]) !== id);
-            renderTable(patientData);
-            renderEditTable();
-            updateStats();
-        }
-
-        function editPatient(id) {
-            const p = patientData.find(p => String(p["รหัสผู้ป่วย"]) === id);
-            if (!p) return;
-            const modal = document.getElementById("editModal");
-            modal.classList.add("show");
-            document.getElementById("editId").value = p["รหัสผู้ป่วย"];
-            document.getElementById("editName").value = p["ชื่อ - สกุล"];
-            document.getElementById("editAge").value = p["อายุ"] !== "—" ? p["อายุ"] : "";
-            document.getElementById("editPhone").value = p["เบอร์โทรศัพท์"] !== "—" ? p["เบอร์โทรศัพท์"] : "";
-
-            document.getElementById("saveEditBtn").onclick = () => {
-                p["ชื่อ - สกุล"] = document.getElementById("editName").value.trim() || "—";
-                p["อายุ"] = document.getElementById("editAge").value.trim() || "—";
-                p["เบอร์โทรศัพท์"] = document.getElementById("editPhone").value.trim() || "—";
-                modal.classList.remove("show");
-                renderTable(patientData);
-                renderEditTable();
-                updateStats();
-            };
-            document.getElementById("cancelEditBtn").onclick = () => modal.classList.remove("show");
-        }
-        window.onclick = e => {
-            const modal = document.getElementById("editModal");
-            const modal2 = document.getElementById("addModal");
-            if (e.target === modal) modal.classList.remove("show");;
-            if (e.target === modal2) modal2.classList.remove("show");;
+        // --- pagination (list tab) ---
+        prevPage.onclick = () => {
+            if (currentPage > 1) { currentPage--; renderTable(); }
+        };
+        nextPage.onclick = () => {
+            const totalPages = Math.ceil((filtered || patientData).length / rowsPerPage);
+            if (currentPage < totalPages) { currentPage++; renderTable(); }
         };
 
-        document.getElementById("saveExcelBtn").addEventListener("click", () => {
-            if (!patientData.length) { alert("ยังไม่มีข้อมูลให้บันทึก"); return; }
-            const ws = XLSX.utils.json_to_sheet(patientData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "รายชื่อคนไข้");
-            const now = new Date();
-            const name = `รายชื่อคนไข้_${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}.xlsx`;
-            XLSX.writeFile(wb, name);
+        // --- search ---
+        searchInput.addEventListener('input', debounce(e => {
+            const q = e.target.value.trim().toLowerCase();
+            if (!q) { filtered = null; currentPage = 1; renderTable(); return; }
+            filtered = patientData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+            currentPage = 1; renderTable();
+        }, 250));
+
+        // --- click handlers (edit/delete) ---
+        document.body.addEventListener('click', e => {
+            const b = e.target.closest('button[data-act]');
+            if (!b) return;
+            const id = b.getAttribute('data-id');
+            const act = b.getAttribute('data-act');
+            if (act === 'delete') {
+                if (confirm('แน่ใจหรือไม่ว่าต้องการลบรายการนี้?')) {
+                    patientData = patientData.filter(p => String(p['รหัสผู้ป่วย']) !== String(id));
+                    renderTable(); renderEditTable(); updateStats();
+                }
+            }
+            if (act === 'edit') openModalForEdit(id);
         });
 
+        // --- modal ---
+        function openModalForEdit(id) {
+            const p = patientData.find(x => String(x['รหัสผู้ป่วย']) === String(id));
+            modalTitle.textContent = 'แก้ไขข้อมูล';
+            inputId.value = p['รหัสผู้ป่วย'];
+            inputName.value = p['ชื่อ - สกุล'] === '—' ? '' : p['ชื่อ - สกุล'];
+            inputAge.value = (p['อายุ'] === '—') ? '' : p['อายุ'];
+            inputPhone.value = (p['เบอร์โทรศัพท์'] === '—') ? '' : p['เบอร์โทรศัพท์'];
+            modal.classList.add('show');
+            saveModal.onclick = () => {
+                p['ชื่อ - สกุล'] = inputName.value.trim() || '—';
+                p['อายุ'] = inputAge.value.trim() || '—';
+                p['เบอร์โทรศัพท์'] = inputPhone.value.trim() || '—';
+                modal.classList.remove('show');
+                renderTable(); renderEditTable(); updateStats();
+            };
+        }
+
+        function openModalForCreate() {
+            modalTitle.textContent = 'เพิ่มคนไข้ใหม่';
+            inputId.value = ''; inputName.value = ''; inputAge.value = ''; inputPhone.value = '';
+            modal.classList.add('show');
+            saveModal.onclick = () => {
+                const id = inputId.value.trim() || generateId();
+                const exists = patientData.some(x => String(x['รหัสผู้ป่วย']) === String(id));
+                if (exists) { alert('รหัสนี้มีอยู่แล้ว'); return; }
+                const rec = { 'รหัสผู้ป่วย': id, 'ชื่อ - สกุล': inputName.value.trim() || '—', 'อายุ': inputAge.value.trim() || '—', 'เบอร์โทรศัพท์': inputPhone.value.trim() || '—' };
+                patientData.unshift(rec);
+                modal.classList.remove('show');
+                renderTable(); renderEditTable(); updateStats(); setActiveTab(tabList);
+            };
+        }
+
+        $('#cancelModal').onclick = () => modal.classList.remove('show');
+        window.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('show'); });
+
+        // --- buttons ---
+        addBtn.onclick = openModalForCreate;
+        openAddModal.onclick = openModalForCreate;
+        $('#clearBtn').onclick = () => { if (confirm('ต้องการล้างข้อมูลทั้งหมดหรือไม่?')) { patientData = []; renderTable(); renderEditTable(); updateStats(); } };
+
+        // --- exports ---
+        exportBtn.onclick = () => {
+            if (!patientData.length) return alert('ไม่มีข้อมูลให้ส่งออก');
+            const ws = XLSX.utils.json_to_sheet(patientData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'รายชื่อคนไข้');
+            XLSX.writeFile(wb, `patients_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        };
+        exportCsvBtn.onclick = () => {
+            if (!patientData.length) return alert('ไม่มีข้อมูล');
+            const rows = patientData.map(r => [r['รหัสผู้ป่วย'], r['ชื่อ - สกุล'], r['อายุ'], r['เบอร์โทรศัพท์']]);
+            const csv = [['รหัสผู้ป่วย', 'ชื่อ - สกุล', 'อายุ', 'เบอร์โทรศัพท์'], ...rows]
+                .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `patients_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click(); URL.revokeObjectURL(url);
+        };
+
+        // --- stats ---
         function updateStats() {
             const total = patientData.length;
-            const ages = patientData.map(p => parseInt(p["อายุ"])).filter(n => !isNaN(n));
-            const avg = ages.length ? (ages.reduce((a, b) => a + b) / ages.length).toFixed(1) : "—";
-            const max = ages.length ? Math.max(...ages) : "—";
-            const min = ages.length ? Math.min(...ages) : "—";
-            const noPhone = patientData.filter(p => !p["เบอร์โทรศัพท์"] || p["เบอร์โทรศัพท์"] === "—").length;
-            document.getElementById("totalPatients").textContent = `จำนวนคนไข้ทั้งหมด: ${total}`;
-            document.getElementById("averageAge").textContent = `อายุเฉลี่ย: ${avg}`;
-            document.getElementById("oldest").textContent = `อายุมากที่สุด: ${max}`;
-            document.getElementById("youngest").textContent = `อายุน้อยที่สุด: ${min}`;
-            document.getElementById("missingPhone").textContent = `ไม่มีเบอร์โทร: ${noPhone} คน`;
+            const ages = patientData.map(p => parseInt(p['อายุ'])).filter(n => !isNaN(n));
+            statTotal.textContent = total;
+            statTotal2.textContent = total;
+            statAvg.textContent = ages.length ? (ages.reduce((a, b) => a + b, 0) / ages.length).toFixed(1) : '—';
+            statOld.textContent = ages.length ? Math.max(...ages) : '—';
+            statYoung.textContent = ages.length ? Math.min(...ages) : '—';
+            statMissing.textContent = patientData.filter(p => !p['เบอร์โทรศัพท์'] || p['เบอร์โทรศัพท์'] === '—').length;
         }
-    </script>
-    <footer style="text-align:center; padding:10px 0; font-size:14px; color:#666; position:fixed; bottom:0; width:100%; background:#f8fafc;">
-    สร้างโดย PanyaDev
-</footer>
-</body>
-</html>
 
+        // --- init ---
+        setActiveTab(tabList);
+        patientData = [];
+        renderTable(); renderEditTable(); updateStats();
+    </script>
+</body>
+
+</html>
