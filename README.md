@@ -14,7 +14,7 @@
 - [XLSX.js](https://cdnjs.com/libraries/xlsx) สำหรับส่งออก Excel
 
 ## วิธีใช้งาน
-1. เปิด `[ลิ้งนี้](https://panyadevx.github.io/Phaitoon-Dental/)` ในเบราว์เซอร์
+1. เปิด [ลิ้งนี้](https://panyadevx.github.io/Phaitoon-Dental/) ในเบราว์เซอร์
 2. ใช้แถบค้นหาเพื่อกรองคนไข้
 3. คลิก **เพิ่ม** หรือ **แก้ไข** เพื่อปรับปรุงข้อมูลคนไข้
 4. คลิก **ส่งออก** เพื่อดาวน์โหลดข้อมูลเป็นไฟล์ Excel
