@@ -1,13 +1,21 @@
-ใบอนุญาต MIT (MIT License)
+MIT License
 
-ลิขสิทธิ์ (c) 2025 PANYADEV
+Copyright (c) 2025 PanyaDev
 
-อนุญาตให้บุคคลใด ๆ ใช้ซอฟต์แวร์นี้และเอกสารประกอบโดยไม่มีค่าใช้จ่าย
-รวมถึงสิทธิ์ในการใช้, คัดลอก, แก้ไข, รวม, เผยแพร่, แจกจ่าย, ให้สิทธิ์ใช้งานต่อ, และขายซอฟต์แวร์
-และอนุญาตให้ผู้ที่ได้รับซอฟต์แวร์ทำสิ่งเหล่านี้ได้ ภายใต้เงื่อนไขดังต่อไปนี้:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-ต้องรวมประกาศลิขสิทธิ์ข้างต้นและประกาศสิทธิ์นี้ในสำเนาหรือส่วนสำคัญของซอฟต์แวร์ทุกฉบับ
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-ซอฟต์แวร์นี้จัดให้ "ตามสภาพ" โดยไม่รับประกันใด ๆ ไม่ว่าจะชัดแจ้งหรือโดยนัย
-รวมถึงแต่ไม่จำกัดเพียงการรับประกันทางการค้า, การใช้งานสำหรับวัตถุประสงค์เฉพาะ, และการไม่ละเมิดสิทธิ์
-ผู้เขียนหรือเจ้าของลิขสิทธิ์จะไม่รับผิดชอบต่อความเสียหายใด ๆ จากการใช้ซอฟต์แวร์นี้
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
