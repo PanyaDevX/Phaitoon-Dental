@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการข้อมูลคนไข้คลินิก (Optimized)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 35px 40px;
+            width: 95%;
+            max-width: 850px;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            border-radius: 10px;
+            background: #e8edf3;
+            cursor: pointer;
+            transition: .25s;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, .3);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        input,
+        button {
+            width: 100%;
+            max-width: 500px;
+            margin: 8px auto;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #ccd6e0;
+            font-size: 15px;
+        }
+
+        button {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:active {
+            transform: scale(.97);
+        }
+
+        #saveExcelBtn {
+            width: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 15px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #e5e9ef;
+        }
+
+        th {
+            background: #007bff;
+            color: #fff;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fbff;
+        }
+
+        tr:hover td {
+            background: #eef5ff;
+        }
+
+        #paginationControls,
+        #editPaginationControls {
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        #paginationControls button,
+        #editPaginationControls button {
+            width: auto !important;
+            /* prevent stretching */
+            min-width: 350px;
+            /* small but readable */
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #ffffff;
+            color: #333;
+            font-size: 14px;
+            font-family: 'Segoe UI', sans-serif;
+            cursor: pointer;
+            /*transition: background-color 0.2s ease, color 0.2s ease;*/
+        }
+
+        #paginationControls button:disabled,
+        #editPaginationControls button:disabled {
+            background-color: #f3f3f3;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        #paginationControls button:not(:disabled):hover,
+        #editPaginationControls button:not(:disabled):hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f6f9ff;
+            border: 1px solid #e3e9f2;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        /* --- Modal Animation --- */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.25s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        #addModal .modal-content input,
+        #editModal .modal-content input {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            margin: 8px 0;
+            padding: 12px 16px;
+            border: 1px solid #ccd6e0;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        #addModal .modal-content button,
+        #editModal .modal-content button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-top: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        #addModal #saveAddBtn,
+        #editModal #saveEditBtn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+
+        #addModal #saveAddBtn:hover,
+        #editModal #saveEditBtn:hover {
+            background-color: #0056b3;
+        }
+
+        #addModal #cancelAddBtn,
+        #editModal #cancelEditBtn {
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+        }
+
+        #addModal #cancelAddBtn:hover,
+        #editModal #cancelEditBtn:hover {
+            background-color: #c7c7c7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🏥 ระบบจัดการข้อมูลคนไข้คลินิก</h1>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="upload">📂 อัปโหลด / ดูรายชื่อ</div>
+            <div class="tab" data-tab="add">➕ เพิ่ม / แก้ไข / ลบ</div>
+            <div class="tab" data-tab="stats">📊 สถิติ</div>
+        </div>
+
+        <div id="upload" class="section active">
+            <div class="button-group">
+                <input type="file" id="fileInput" accept=".xlsx,.xls">
+                <button id="saveExcelBtn">💾 บันทึกข้อมูลเป็น Excel (.xlsx)</button>
+            </div>
+            <input style="display: flex; gap: 10px; align-items: center;" type="text" id="searchInput" placeholder="🔍 ค้นหาจากชื่อหรือรหัสผู้ป่วย...">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>รหัสผู้ป่วย</th>
+                        <th>ชื่อ - สกุล</th>
+                        <th>อายุ</th>
+                        <th>เบอร์โทรศัพท์</th>
+                        <th>การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="paginationControls"></div>
+        </div>
+
+        <div id="add" class="section">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <input type="text" id="editSearchInput" placeholder="🔍 ค้นหาชื่อหรือรหัสในหน้านี้..." style="flex: 1;">
+                <button id="openAddModalBtn" style="width:400px; padding:10px 20px;">➕ เพิ่มข้อมูลใหม่</button>
+            </div>
+
+            <table id="editTable">
+                <thead>
+                    <tr>
+                        <th>รหัสผู้ป่วย</th>
+                        <th>ชื่อ - สกุล</th>
+                        <th>อายุ</th>
+                        <th>เบอร์โทรศัพท์</th>
+                        <th>การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="editPaginationControls"></div>
+        </div>
+
+        <div id="addModal" class="modal">
+            <div class="modal-content">
+                <h3>➕ เพิ่มข้อมูลคนไข้ใหม่</h3>
+                <input type="text" id="addId" placeholder="รหัสผู้ป่วย (ถ้าเว้นไว้จะสร้างอัตโนมัติ)">
+                <input type="text" id="addName" placeholder="ชื่อ - สกุล">
+                <input type="number" id="addAge" placeholder="อายุ">
+                <input type="text" id="addPhone" placeholder="เบอร์โทรศัพท์">
+                <button id="saveAddBtn">💾 บันทึก</button>
+                <button id="cancelAddBtn">❌ ยกเลิก</button>
+            </div>
+        </div>
+
+
+        <div id="stats" class="section">
+            <h3 style="text-align:center;">📈 สถิติคนไข้</h3>
+            <div class="stats-grid">
+                <div class="stat-card" id="totalPatients">จำนวนคนไข้ทั้งหมด: 0</div>
+                <div class="stat-card" id="averageAge">อายุเฉลี่ย: -</div>
+                <div class="stat-card" id="oldest">อายุมากที่สุด: -</div>
+                <div class="stat-card" id="youngest">อายุน้อยที่สุด: -</div>
+                <div class="stat-card" id="missingPhone">ไม่มีเบอร์โทร: 0 คน</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>✏️ แก้ไขข้อมูลคนไข้</h3>
+            <input type="text" id="editId" readonly>
+            <input type="text" id="editName" placeholder="ชื่อ - สกุล">
+            <input type="number" id="editAge" placeholder="อายุ">
+            <input type="text" id="editPhone" placeholder="เบอร์โทรศัพท์">
+            <button id="saveEditBtn">💾 บันทึก</button>
+            <button id="cancelEditBtn">❌ ยกเลิก</button>
+        </div>
+    </div>
+
+    <script>
+        let patientData = [];
+        let currentPage = 1;
+        let currentEditPage = 1;
+        const rowsPerPage = 100;
+
+        document.querySelectorAll(".tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+                tab.classList.add("active");
+                document.getElementById(tab.dataset.tab).classList.add("active");
+                if (tab.dataset.tab === "stats") updateStats();
+                if (tab.dataset.tab === "add") renderEditTable();
+            });
+        });
+
+        document.getElementById("fileInput").addEventListener("change", e => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = evt => {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const sheet = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheet];
+                patientData = XLSX.utils.sheet_to_json(worksheet);
+                currentPage = 1; currentEditPage = 1;
+                renderTable(patientData);
+                renderEditTable();
+                updateStats();
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        const addModal = document.getElementById("addModal");
+        document.getElementById("openAddModalBtn").addEventListener("click", () => {
+            addModal.classList.add("show");
+            ['addId', 'addName', 'addAge', 'addPhone'].forEach(id => document.getElementById(id).value = "");
+        });
+
+        document.getElementById("cancelAddBtn").addEventListener("click", () => {
+            addModal.classList.remove("show");
+        });
+
+        document.getElementById("saveAddBtn").addEventListener("click", () => {
+            const id = document.getElementById("addId").value.trim() || generatePatientID();
+            const name = document.getElementById("addName").value.trim();
+            const age = document.getElementById("addAge").value.trim();
+            const phone = document.getElementById("addPhone").value.trim();
+            if (!name) { alert("กรุณากรอกชื่อ - สกุล"); return; }
+
+            const exists = patientData.some(p => String(p["รหัสผู้ป่วย"]) === id);
+            if (exists) {
+                alert("⚠️ รหัสผู้ป่วยนี้มีอยู่แล้ว!");
+                return;
+            }
+
+            patientData.push({
+                "รหัสผู้ป่วย": id,
+                "ชื่อ - สกุล": name,
+                "อายุ": age || "—",
+                "เบอร์โทรศัพท์": phone || "—"
+            });
+
+            alert("✅ เพิ่มข้อมูลคนไข้ใหม่สำเร็จ!");
+            modal.classList.remove("show");
+            renderTable(patientData);
+            renderEditTable();
+            updateStats();
+        });
+        function generatePatientID() { return Math.floor(10000 + Math.random() * 90000); }
+
+        document.getElementById("editSearchInput").addEventListener("input", debounce(e => {
+            const q = e.target.value.toLowerCase();
+            const filtered = patientData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+            currentEditPage = 1;
+            renderFilteredEditTable(filtered);
+        }));
+
+        function renderTable(data) {
+            const head = document.querySelector("#dataTable thead");
+            const body = document.querySelector("#dataTable tbody");
+            head.innerHTML = ""; body.innerHTML = "";
+
+            if (!data.length) {
+                body.innerHTML = "<tr><td colspan='4'>ยังไม่มีข้อมูลคนไข้</td></tr>";
+                document.getElementById("paginationControls").innerHTML = "";
+                return;
+            }
+            const headers = ["รหัสผู้ป่วย", "ชื่อ - สกุล", "อายุ", "เบอร์โทรศัพท์"];
+            const headerRow = document.createElement("tr");
+            headers.forEach(h => { const th = document.createElement("th"); th.textContent = h; headerRow.appendChild(th); });
+            head.appendChild(headerRow);
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = data.slice(start, end);
+
+            const fragment = document.createDocumentFragment();
+            pageData.forEach(row => {
+                const tr = document.createElement("tr");
+                headers.forEach(h => {
+                    const td = document.createElement("td");
+                    td.textContent = row[h] || "—";
+                    tr.appendChild(td);
+                });
+                fragment.appendChild(tr);
+            });
+            body.appendChild(fragment);
+            renderPaginationControls(data.length);
+        }
+
+        function renderPaginationControls(totalRows) {
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            const container = document.getElementById("paginationControls");
+            container.innerHTML = "";
+
+            if (totalPages <= 1) return;
+
+            const prevBtn = createBtn("<", currentPage === 1, () => { if (currentPage > 1) { currentPage--; renderTable(patientData); } });
+            const nextBtn = createBtn(">", currentPage === totalPages, () => { if (currentPage < totalPages) { currentPage++; renderTable(patientData); } });
+            const pageLabel = createLabel(`หน้า ${currentPage} จาก ${totalPages}`);
+
+            container.append(prevBtn, pageLabel, nextBtn);
+        }
+
+        function createBtn(label, disabled, onClick) {
+            const btn = document.createElement("button");
+            btn.textContent = label;
+            btn.disabled = disabled;
+            btn.onclick = onClick;
+            return btn;
+        }
+        function createLabel(text) {
+            const span = document.createElement("span");
+            span.textContent = text;
+            span.style.padding = "6px 14px";
+            span.style.border = "1px solid #ddd";
+            span.style.borderRadius = "6px";
+            span.style.background = "#f9f9f9";
+            span.style.minWidth = "120px";
+            span.style.display = "inline-block";
+            return span;
+        }
+
+        function debounce(fn, delay = 300) {
+            let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+        }
+        document.getElementById("searchInput").addEventListener("input", debounce(e => {
+            const q = e.target.value.toLowerCase();
+            const filtered = patientData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+            currentPage = 1;
+            renderTable(filtered);
+        }));
+
+        function renderFilteredEditTable(data) {
+            const tbody = document.querySelector("#editTable tbody");
+            tbody.innerHTML = "";
+
+            if (!data.length) {
+                tbody.innerHTML = "<tr><td colspan='5'>ไม่พบข้อมูลที่ค้นหา</td></tr>";
+                document.getElementById("editPaginationControls").innerHTML = "";
+                return;
+            }
+
+            const start = (currentEditPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = data.slice(start, end);
+
+            const frag = document.createDocumentFragment();
+            pageData.forEach(p => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+      <td>${p["รหัสผู้ป่วย"] || "—"}</td>
+      <td>${p["ชื่อ - สกุล"] || "—"}</td>
+      <td>${p["อายุ"] || "—"}</td>
+      <td>${p["เบอร์โทรศัพท์"] || "—"}</td>
+      <td>
+        <button onclick="editPatient('${p["รหัสผู้ป่วย"]}')">✏️ แก้ไข</button>
+        <button onclick="deletePatient('${p["รหัสผู้ป่วย"]}')">🗑️ ลบ</button>
+      </td>`;
+                frag.appendChild(tr);
+            });
+            tbody.appendChild(frag);
+        }
+
+
+        function renderEditTable() {
+            const tbody = document.querySelector("#editTable tbody");
+            tbody.innerHTML = "";
+
+            if (!patientData.length) {
+                tbody.innerHTML = "<tr><td colspan='5'>ยังไม่มีข้อมูลคนไข้</td></tr>";
+                document.getElementById("editPaginationControls").innerHTML = "";
+                return;
+            }
+
+            const start = (currentEditPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = patientData.slice(start, end);
+
+            const frag = document.createDocumentFragment();
+            pageData.forEach(p => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+      <td>${p["รหัสผู้ป่วย"] || "—"}</td>
+      <td>${p["ชื่อ - สกุล"] || "—"}</td>
+      <td>${p["อายุ"] || "—"}</td>
+      <td>${p["เบอร์โทรศัพท์"] || "—"}</td>
+      <td>
+        <button onclick="editPatient('${p["รหัสผู้ป่วย"]}')">✏️ แก้ไข</button>
+        <button onclick="deletePatient('${p["รหัสผู้ป่วย"]}')">🗑️ ลบ</button>
+      </td>`;
+                frag.appendChild(tr);
+            });
+            tbody.appendChild(frag);
+            renderEditPaginationControls(patientData.length);
+        }
+
+        function renderEditPaginationControls(totalRows) {
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+            const container = document.getElementById("editPaginationControls");
+            container.innerHTML = "";
+            if (totalPages <= 1) return;
+
+            const prevBtn = createBtn("<", currentEditPage === 1, () => { if (currentEditPage > 1) { currentEditPage--; renderEditTable(); } });
+            const nextBtn = createBtn(">", currentEditPage === totalPages, () => { if (currentEditPage < totalPages) { currentEditPage++; renderEditTable(); } });
+            const pageLabel = createLabel(`หน้า ${currentEditPage} จาก ${totalPages}`);
+
+            container.append(prevBtn, pageLabel, nextBtn);
+        }
+
+        function deletePatient(id) {
+            patientData = patientData.filter(p => String(p["รหัสผู้ป่วย"]) !== id);
+            renderTable(patientData);
+            renderEditTable();
+            updateStats();
+        }
+
+        function editPatient(id) {
+            const p = patientData.find(p => String(p["รหัสผู้ป่วย"]) === id);
+            if (!p) return;
+            const modal = document.getElementById("editModal");
+            modal.classList.add("show");
+            document.getElementById("editId").value = p["รหัสผู้ป่วย"];
+            document.getElementById("editName").value = p["ชื่อ - สกุล"];
+            document.getElementById("editAge").value = p["อายุ"] !== "—" ? p["อายุ"] : "";
+            document.getElementById("editPhone").value = p["เบอร์โทรศัพท์"] !== "—" ? p["เบอร์โทรศัพท์"] : "";
+
+            document.getElementById("saveEditBtn").onclick = () => {
+                p["ชื่อ - สกุล"] = document.getElementById("editName").value.trim() || "—";
+                p["อายุ"] = document.getElementById("editAge").value.trim() || "—";
+                p["เบอร์โทรศัพท์"] = document.getElementById("editPhone").value.trim() || "—";
+                modal.classList.remove("show");
+                renderTable(patientData);
+                renderEditTable();
+                updateStats();
+            };
+            document.getElementById("cancelEditBtn").onclick = () => modal.classList.remove("show");
+        }
+        window.onclick = e => {
+            const modal = document.getElementById("editModal");
+            const modal2 = document.getElementById("addModal");
+            if (e.target === modal) modal.classList.remove("show");;
+            if (e.target === modal2) modal2.classList.remove("show");;
+        };
+
+        document.getElementById("saveExcelBtn").addEventListener("click", () => {
+            if (!patientData.length) { alert("ยังไม่มีข้อมูลให้บันทึก"); return; }
+            const ws = XLSX.utils.json_to_sheet(patientData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "รายชื่อคนไข้");
+            const now = new Date();
+            const name = `รายชื่อคนไข้_${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}.xlsx`;
+            XLSX.writeFile(wb, name);
+        });
+
+        function updateStats() {
+            const total = patientData.length;
+            const ages = patientData.map(p => parseInt(p["อายุ"])).filter(n => !isNaN(n));
+            const avg = ages.length ? (ages.reduce((a, b) => a + b) / ages.length).toFixed(1) : "—";
+            const max = ages.length ? Math.max(...ages) : "—";
+            const min = ages.length ? Math.min(...ages) : "—";
+            const noPhone = patientData.filter(p => !p["เบอร์โทรศัพท์"] || p["เบอร์โทรศัพท์"] === "—").length;
+            document.getElementById("totalPatients").textContent = `จำนวนคนไข้ทั้งหมด: ${total}`;
+            document.getElementById("averageAge").textContent = `อายุเฉลี่ย: ${avg}`;
+            document.getElementById("oldest").textContent = `อายุมากที่สุด: ${max}`;
+            document.getElementById("youngest").textContent = `อายุน้อยที่สุด: ${min}`;
+            document.getElementById("missingPhone").textContent = `ไม่มีเบอร์โทร: ${noPhone} คน`;
+        }
+    </script>
+</body>
+
+</html>
