@@ -166,12 +166,31 @@
                     <!-- Auto-save Setting -->
                     <div class="setting-group">
                         <div class="setting-header">
+                            <span class="setting-icon">📝</span>
+                            <div>
+                                <div class="setting-title">จำนวนแถวต่อหน้า</div>
+                                <div class="setting-desc">ระบบจะบันทึกข้อมูลอัตโนมัติตามช่วงเวลาที่กำหนด</div>
+                            </div>
+                        </div>
+
+                        <select id="rowsPerPageSelect" class="setting-control">
+                            <option value="25">25 แถว</option>
+                            <option value="50" selected>50 แถว</option>
+                            <option value="100">100 แถว</option>
+                            <option value="250">250 แถว</option>
+                            <option value="500">500 แถว</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-header">
                             <span class="setting-icon">💾</span>
                             <div>
                                 <div class="setting-title">บันทึกอัตโนมัติ</div>
                                 <div class="setting-desc">ระบบจะบันทึกข้อมูลอัตโนมัติตามช่วงเวลาที่กำหนด</div>
                             </div>
                         </div>
+
                         <select id="autoSaveSelect" class="setting-control">
                             <option value="0">ปิด</option>
                             <option value="15000">15 วินาที</option>
@@ -206,7 +225,8 @@
                             </div>
                         </div>
                         <div class="slider-container">
-                            <input type="range" id="fontSizeSlider" min="90" max="120" value="100" class="setting-slider">
+                            <input type="range" id="fontSizeSlider" min="90" max="120" value="100"
+                                class="setting-slider">
                             <span id="fontSizeValue" class="slider-value">100%</span>
                         </div>
                     </div>
@@ -262,9 +282,11 @@
                         </div>
                         <div class="column-toggles">
                             <label><input type="checkbox" class="col-toggle" value="รหัส" checked> รหัส</label>
-                            <label><input type="checkbox" class="col-toggle" value="ชื่อ - สกุล" checked> ชื่อ - สกุล</label>
+                            <label><input type="checkbox" class="col-toggle" value="ชื่อ - สกุล" checked> ชื่อ -
+                                สกุล</label>
                             <label><input type="checkbox" class="col-toggle" value="อายุ" checked> อายุ</label>
-                            <label><input type="checkbox" class="col-toggle" value="เบอร์โทร" checked> เบอร์โทรศัพท์</label>
+                            <label><input type="checkbox" class="col-toggle" value="เบอร์โทร" checked>
+                                เบอร์โทรศัพท์</label>
                         </div>
                     </div>
                 </div>
