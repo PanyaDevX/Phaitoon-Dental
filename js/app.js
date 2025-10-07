@@ -1,6 +1,6 @@
 // --- state ---
 let patientData = [];
-const rowsPerPage = 50;
+const rowsPerPage = 100;
 let currentPage = 1;
 let currentEditPage = 1;
 let filtered = null;
@@ -324,4 +324,5 @@ function safeUpdateUI() {
 
 // --- init ---
 loadDataFromLocal();
+
 setActiveTab(tabList);
