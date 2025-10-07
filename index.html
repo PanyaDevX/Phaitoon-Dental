@@ -26,6 +26,7 @@
                 <button id="tab-list" class="active" role="tab" aria-controls="panel-list">📂 หน้าหลัก</button>
                 <button style="display: none;" id="tab-edit" role="tab" aria-controls="panel-edit"></button>
                 <button id="tab-stats" role="tab" aria-controls="panel-stats">📊 สถิติ</button>
+                <button id="tab-settings" role="tab" aria-controls="panel-settings">⚙️ การตั้งค่า</button>
             </nav>
 
             <hr style="margin:12px 0;border:0;border-top:1px solid #f1f6fb">
@@ -152,6 +153,123 @@
                     </div>
                 </div>
             </section>
+
+            <!-- SETTINGS PANEL -->
+            <!-- SETTINGS PANEL -->
+            <section id="panel-settings" class="card" style="display:none" role="tabpanel">
+                <header>
+                    <h1>⚙️ การตั้งค่า</h1>
+                    <p class="muted">ปรับแต่งการใช้งานระบบ</p>
+                </header>
+
+                <div class="settings-list">
+                    <!-- Auto-save Setting -->
+                    <div class="setting-group">
+                        <div class="setting-header">
+                            <span class="setting-icon">💾</span>
+                            <div>
+                                <div class="setting-title">บันทึกอัตโนมัติ</div>
+                                <div class="setting-desc">ระบบจะบันทึกข้อมูลอัตโนมัติตามช่วงเวลาที่กำหนด</div>
+                            </div>
+                        </div>
+                        <select id="autoSaveSelect" class="setting-control">
+                            <option value="0">ปิด</option>
+                            <option value="15000">15 วินาที</option>
+                            <option value="30000" selected>30 วินาที</option>
+                            <option value="60000">60 วินาที</option>
+                        </select>
+                    </div>
+
+                    <!-- Export Format -->
+                    <div class="setting-group">
+                        <div class="setting-header">
+                            <span class="setting-icon">📤</span>
+                            <div>
+                                <div class="setting-title">รูปแบบไฟล์ส่งออก</div>
+                                <div class="setting-desc">เลือกประเภทไฟล์เมื่อส่งออกข้อมูล</div>
+                            </div>
+                        </div>
+                        <select id="exportFormatSelect" class="setting-control">
+                            <option value="xlsx" selected>Excel (.xlsx)</option>
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="json">JSON (.json)</option>
+                        </select>
+                    </div>
+
+                    <!-- Font Size -->
+                    <div class="setting-group">
+                        <div class="setting-header">
+                            <span class="setting-icon">🔤</span>
+                            <div>
+                                <div class="setting-title">ขนาดตัวอักษร</div>
+                                <div class="setting-desc">ปรับขนาดตัวอักษรให้อ่านง่ายขึ้น</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" id="fontSizeSlider" min="90" max="120" value="100" class="setting-slider">
+                            <span id="fontSizeValue" class="slider-value">100%</span>
+                        </div>
+                    </div>
+
+                    <!-- Checkboxes -->
+                    <div class="setting-group">
+                        <label class="setting-checkbox">
+                            <div class="checkbox-content">
+                                <span class="setting-icon">🗑️</span>
+                                <div>
+                                    <div class="setting-title">ยืนยันก่อนลบ</div>
+                                    <div class="setting-desc">แสดงข้อความยืนยันเมื่อลบข้อมูล</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="confirmDeleteToggle" checked>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-checkbox">
+                            <div class="checkbox-content">
+                                <span class="setting-icon">📌</span>
+                                <div>
+                                    <div class="setting-title">จำแท็บล่าสุด</div>
+                                    <div class="setting-desc">บันทึกแท็บที่ใช้งานล่าสุด</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="rememberTabToggle" checked>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-checkbox">
+                            <div class="checkbox-content">
+                                <span class="setting-icon">💡</span>
+                                <div>
+                                    <div class="setting-title">แสดงคำแนะนำ</div>
+                                    <div class="setting-desc">แสดงคู่มือและคำแนะนำการใช้งาน</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="showTipsToggle" checked>
+                        </label>
+                    </div>
+
+                    <!-- Column Visibility -->
+                    <div class="setting-group column-visibility">
+                        <div class="setting-header">
+                            <span class="setting-icon">🗂️</span>
+                            <div>
+                                <div class="setting-title">การแสดงคอลัมน์</div>
+                                <div class="setting-desc">เลือกคอลัมน์ที่ต้องการแสดงในตาราง</div>
+                            </div>
+                        </div>
+                        <div class="column-toggles">
+                            <label><input type="checkbox" class="col-toggle" value="รหัส" checked> รหัส</label>
+                            <label><input type="checkbox" class="col-toggle" value="ชื่อ - สกุล" checked> ชื่อ - สกุล</label>
+                            <label><input type="checkbox" class="col-toggle" value="อายุ" checked> อายุ</label>
+                            <label><input type="checkbox" class="col-toggle" value="เบอร์โทร" checked> เบอร์โทรศัพท์</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
