@@ -1,11 +1,28 @@
-// --- state ---
+// ==========================================
+//  Patient Management App – app.js (UPDATED)
+// ==========================================
+
+// ----------------- STATE ------------------
 let patientData = [];
-const rowsPerPage = 100;
+let rowsPerPage = 50;
 let currentPage = 1;
 let currentEditPage = 1;
 let filtered = null;
 
-// --- elements ---
+// Settings state
+let autoSaveTimer = null;
+let confirmDelete = true;
+let exportFormat = 'xlsx';
+let rememberTab = true;
+let fontScale = 1;
+let visibleColumns = {
+    'รหัส': true,
+    'ชื่อ - สกุล': true,
+    'อายุ': true,
+    'เบอร์โทร': true
+};
+
+// --------------- ELEMENTS -----------------
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 
@@ -18,10 +35,13 @@ const editTableBody = $('#editTable tbody');
 const tabList = $('#tab-list');
 const tabEdit = $('#tab-edit');
 const tabStats = $('#tab-stats');
+const tabSettings = $('#tab-settings');
+
 const panels = {
     list: $('#panel-list'),
     edit: $('#panel-edit'),
-    stats: $('#panel-stats')
+    stats: $('#panel-stats'),
+    settings: $('#panel-settings')
 };
 
 // modal
@@ -51,32 +71,50 @@ const pagerInfo = $('#pager-info');
 
 // exports
 const exportBtn = $('#exportBtn');
-const exportCsvBtn = $('#exportCsv');
+const exportCsvBtn = $('#exportCsv'); // kept for stats panel
 
-// --- utilities ---
+// settings controls
+const autoSaveSelect = $('#autoSaveSelect');
+const exportFormatSelect = $('#exportFormatSelect');
+const confirmDeleteToggle = $('#confirmDeleteToggle');
+const fontSizeSlider = $('#fontSizeSlider');
+const fontSizeValue = $('#fontSizeValue');
+const rememberTabToggle = $('#rememberTabToggle');
+const showTipsToggle = $('#showTipsToggle');
+const colToggles = $$('.col-toggle');
+
+// tips block
+const tipsBlock = document.querySelector('.sidebar ol');
+
+// --------------- UTILITIES ----------------
 const sanitize = v => (v === undefined || v === null || v === '') ? '—' : String(v);
 const generateId = () => String(Math.floor(10000 + Math.random() * 90000));
 const debounce = (fn, delay = 300) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), delay); }; };
 
-// --- set active tab ---
+// -------------- TAB HANDLING ---------------
 function setActiveTab(tab) {
-    [tabList, tabEdit, tabStats].forEach(b => b.classList.remove('active'));
+    [tabList, tabEdit, tabStats, tabSettings].forEach(b => b.classList.remove('active'));
     tab.classList.add('active');
-    panels.list.style.display = panels.edit.style.display = panels.stats.style.display = 'none';
+
+    Object.values(panels).forEach(p => p.style.display = 'none');
     if (tab === tabList) panels.list.style.display = 'block';
     if (tab === tabEdit) panels.edit.style.display = 'block';
-    if (tab === tabStats) panels.stats.style.display = 'block';
-    if (tab === tabStats) updateStats();
+    if (tab === tabStats) { panels.stats.style.display = 'block'; updateStats(); }
+    if (tab === tabSettings) panels.settings.style.display = 'block';
+
     if (tab === tabList) renderTable();
     if (tab === tabEdit) renderEditTable();
+
+    // remember tab
+    if (rememberTab) localStorage.setItem('lastTab', tab.id);
 }
 
-// --- tab events ---
 tabList.onclick = () => setActiveTab(tabList);
 tabEdit.onclick = () => setActiveTab(tabEdit);
 tabStats.onclick = () => setActiveTab(tabStats);
+tabSettings.onclick = () => setActiveTab(tabSettings);
 
-// --- file handling ---
+// ----------- FILE HANDLING -----------------
 ['dragenter', 'dragover'].forEach(ev => {
     dropLabel.addEventListener(ev, e => { e.preventDefault(); dropLabel.textContent = 'ปล่อยเพื่ออัปโหลดไฟล์ .xlsx'; });
 });
@@ -100,7 +138,7 @@ function handleFile(file) {
                 'รหัสผู้ป่วย': r['รหัสผู้ป่วย'] ?? r['id'] ?? r['รหัส'] ?? generateId(),
                 'ชื่อ - สกุล': r['ชื่อ - สกุล'] ?? r['name'] ?? '—',
                 'อายุ': r['อายุ'] ?? r['age'] ?? '—',
-                'เบอร์โทรศัพท์': r['เบอร์โทรศัพท์'] ?? r['phone'] ?? '—'
+                'เบอร์โทร': r['เบอร์โทร'] ?? r['phone'] ?? '—'
             }));
             currentPage = 1; currentEditPage = 1; filtered = null;
             safeUpdateUI(); setActiveTab(tabList);
@@ -109,7 +147,24 @@ function handleFile(file) {
     reader.readAsArrayBuffer(file);
 }
 
-// --- shared table renderer ---
+// ----------- TABLE RENDERERS ---------------
+function applyColumnVisibility() {
+    const visible = visibleColumns;
+    const ths = $$('#dataTable thead th');
+    ths.forEach(th => {
+        const key = th.textContent.trim();
+        if (visible[key] === false) th.style.display = 'none';
+        else th.style.display = '';
+    });
+    const rows = $$('#dataTable tbody tr');
+    rows.forEach(row => {
+        row.querySelectorAll('td').forEach((td, i) => {
+            const key = ths[i].textContent.trim();
+            td.style.display = (visible[key] === false) ? 'none' : '';
+        });
+    });
+}
+
 function renderTable(isEdit = false) {
     const data = filtered || patientData;
     const start = (currentPage - 1) * rowsPerPage;
@@ -130,7 +185,7 @@ function renderTable(isEdit = false) {
                 <td>${sanitize(p['รหัสผู้ป่วย'])}</td>
                 <td>${sanitize(p['ชื่อ - สกุล'])}</td>
                 <td>${sanitize(p['อายุ'])}</td>
-                <td>${sanitize(p['เบอร์โทรศัพท์'])}</td>
+                <td>${sanitize(p['เบอร์โทร'])}</td>
                 <td style='text-align:right' class='actions'>
                     <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='edit'>✏️ แก้ไข</button>
                     <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='delete'>🗑️ ลบ</button>
@@ -141,10 +196,10 @@ function renderTable(isEdit = false) {
     if (!isEdit) {
         const totalPages = Math.max(1, Math.ceil(data.length / rowsPerPage));
         pagerInfo.textContent = `หน้า ${currentPage} จาก ${totalPages}`;
+        applyColumnVisibility();
     }
 }
 
-// --- renderEditTable (removed) ---
 function renderEditTable() {
     const data = patientData;
     const start = (currentEditPage - 1) * rowsPerPage;
@@ -163,7 +218,7 @@ function renderEditTable() {
                 <td>${sanitize(p['รหัสผู้ป่วย'])}</td>
                 <td>${sanitize(p['ชื่อ - สกุล'])}</td>
                 <td>${sanitize(p['อายุ'])}</td>
-                <td>${sanitize(p['เบอร์โทรศัพท์'])}</td>
+                <td>${sanitize(p['เบอร์โทร'])}</td>
                 <td style='text-align:right' class='actions'>
                     <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='edit'>✏️ แก้ไข</button>
                     <button class='pill' data-id='${p['รหัสผู้ป่วย']}' data-act='delete'>🗑️ ลบ</button>
@@ -172,16 +227,14 @@ function renderEditTable() {
     });
 }
 
-// --- pagination (list tab) ---
-prevPage.onclick = () => {
-    if (currentPage > 1) { currentPage--; renderTable(); }
-};
+// ------------ PAGINATION -------------------
+prevPage.onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
 nextPage.onclick = () => {
     const totalPages = Math.ceil((filtered || patientData).length / rowsPerPage);
     if (currentPage < totalPages) { currentPage++; renderTable(); }
 };
 
-// --- search ---
+// --------------- SEARCH --------------------
 searchInput.addEventListener('input', debounce(e => {
     const q = e.target.value.trim().toLowerCase();
     if (!q) { filtered = null; currentPage = 1; renderTable(); return; }
@@ -189,34 +242,35 @@ searchInput.addEventListener('input', debounce(e => {
     currentPage = 1; renderTable();
 }, 250));
 
-// --- click handlers (edit/delete) ---
+// ----------- EDIT / DELETE -----------------
 document.body.addEventListener('click', e => {
     const b = e.target.closest('button[data-act]');
     if (!b) return;
     const id = b.getAttribute('data-id');
     const act = b.getAttribute('data-act');
     if (act === 'delete') {
-        if (confirm('แน่ใจหรือไม่ว่าต้องการลบรายการนี้?')) {
-            patientData = patientData.filter(p => String(p['รหัสผู้ป่วย']) !== String(id));
-            safeUpdateUI();
+        if (confirmDelete) {
+            if (!confirm('แน่ใจหรือไม่ว่าต้องการลบรายการนี้?')) return;
         }
+        patientData = patientData.filter(p => String(p['รหัสผู้ป่วย']) !== String(id));
+        safeUpdateUI();
     }
     if (act === 'edit') openModalForEdit(id);
 });
 
-// --- modal ---
+// ---------------- MODAL --------------------
 function openModalForEdit(id) {
     const p = patientData.find(x => String(x['รหัสผู้ป่วย']) === String(id));
     modalTitle.textContent = 'แก้ไขข้อมูล';
     inputId.value = p['รหัสผู้ป่วย'];
     inputName.value = p['ชื่อ - สกุล'] === '—' ? '' : p['ชื่อ - สกุล'];
     inputAge.value = (p['อายุ'] === '—') ? '' : p['อายุ'];
-    inputPhone.value = (p['เบอร์โทรศัพท์'] === '—') ? '' : p['เบอร์โทรศัพท์'];
+    inputPhone.value = (p['เบอร์โทร'] === '—') ? '' : p['เบอร์โทร'];
     modal.classList.add('show');
     saveModal.onclick = () => {
         p['ชื่อ - สกุล'] = inputName.value.trim() || '—';
         p['อายุ'] = inputAge.value.trim() || '—';
-        p['เบอร์โทรศัพท์'] = inputPhone.value.trim() || '—';
+        p['เบอร์โทร'] = inputPhone.value.trim() || '—';
         modal.classList.remove('show');
         safeUpdateUI();
     };
@@ -234,7 +288,7 @@ function openModalForCreate() {
             'รหัสผู้ป่วย': id,
             'ชื่อ - สกุล': inputName.value.trim() || '—',
             'อายุ': inputAge.value.trim() || '—',
-            'เบอร์โทรศัพท์': inputPhone.value.trim() || '—'
+            'เบอร์โทร': inputPhone.value.trim() || '—'
         };
         patientData.unshift(rec);
         modal.classList.remove('show');
@@ -246,7 +300,7 @@ function openModalForCreate() {
 $('#cancelModal').onclick = () => modal.classList.remove('show');
 window.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('show'); });
 
-// --- buttons ---
+// --------------- BUTTONS -------------------
 addBtn.onclick = openModalForCreate;
 openAddModal.onclick = openModalForCreate;
 $('#clearBtn').onclick = () => {
@@ -257,27 +311,33 @@ $('#clearBtn').onclick = () => {
     }
 };
 
-// --- exports ---
+// --------------- EXPORT --------------------
 exportBtn.onclick = () => {
     if (!patientData.length) return alert('ไม่มีข้อมูลให้ส่งออก');
-    const ws = XLSX.utils.json_to_sheet(patientData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'รายชื่อคนไข้');
-    XLSX.writeFile(wb, `patients_${new Date().toISOString().slice(0, 10)}.xlsx`);
-};
-exportCsvBtn.onclick = () => {
-    if (!patientData.length) return alert('ไม่มีข้อมูล');
-    const rows = patientData.map(r => [r['รหัสผู้ป่วย'], r['ชื่อ - สกุล'], r['อายุ'], r['เบอร์โทรศัพท์']]);
-    const csv = [['รหัสผู้ป่วย', 'ชื่อ - สกุล', 'อายุ', 'เบอร์โทรศัพท์'], ...rows]
-        .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `patients_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+    if (exportFormat === 'xlsx') {
+        const ws = XLSX.utils.json_to_sheet(patientData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'รายชื่อคนไข้');
+        XLSX.writeFile(wb, `patients_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } else if (exportFormat === 'csv') {
+        const rows = patientData.map(r => [r['รหัสผู้ป่วย'], r['ชื่อ - สกุล'], r['อายุ'], r['เบอร์โทร']]);
+        const csv = [['รหัสผู้ป่วย', 'ชื่อ - สกุล', 'อายุ', 'เบอร์โทร'], ...rows]
+            .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `patients_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    } else if (exportFormat === 'json') {
+        const blob = new Blob([JSON.stringify(patientData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `patients_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click(); URL.revokeObjectURL(url);
+    }
 };
 
-// --- stats ---
+// --------------- STATS ---------------------
 function updateStats() {
     const total = patientData.length;
     const ages = patientData.map(p => parseInt(p['อายุ'])).filter(n => !isNaN(n));
@@ -286,14 +346,13 @@ function updateStats() {
     statAvg.textContent = ages.length ? (ages.reduce((a, b) => a + b, 0) / ages.length).toFixed(1) : '—';
     statOld.textContent = ages.length ? Math.max(...ages) : '—';
     statYoung.textContent = ages.length ? Math.min(...ages) : '—';
-    statMissing.textContent = patientData.filter(p => !p['เบอร์โทรศัพท์'] || p['เบอร์โทรศัพท์'] === '—').length;
+    statMissing.textContent = patientData.filter(p => !p['เบอร์โทร'] || p['เบอร์โทร'] === '—').length;
 }
 
-// --- local save/load ---
+// --------- LOCAL SAVE / LOAD ---------------
 function saveDataToLocal() {
     try {
         localStorage.setItem('patientData', JSON.stringify(patientData));
-        console.log('✅ Data saved locally');
     } catch (e) {
         console.error('❌ Failed to save data:', e);
     }
@@ -307,14 +366,13 @@ function loadDataFromLocal() {
             renderTable();
             renderEditTable();
             updateStats();
-            console.log('📦 Loaded data from local storage');
         }
     } catch (e) {
         console.error('❌ Failed to load data:', e);
     }
 }
 
-// --- update/save ---
+// ----------- UPDATE / SAVE -----------------
 function safeUpdateUI() {
     renderTable();
     renderEditTable();
@@ -322,7 +380,123 @@ function safeUpdateUI() {
     saveDataToLocal();
 }
 
-// --- init ---
+// --------------- SETTINGS ------------------
+
+// auto-save
+function startAutoSave(interval) {
+    if (autoSaveTimer) clearInterval(autoSaveTimer);
+    if (interval > 0) autoSaveTimer = setInterval(saveDataToLocal, interval);
+}
+
+// font size
+function setFontScale(scale) {
+    fontScale = scale;
+    document.documentElement.style.setProperty('--font-scale', scale);
+    fontSizeValue.textContent = Math.round(scale * 100) + '%';
+}
+
+// column visibility toggle
+colToggles.forEach(chk => {
+    chk.addEventListener('change', () => {
+        visibleColumns[chk.value] = chk.checked;
+        localStorage.setItem('visibleColumns', JSON.stringify(visibleColumns));
+        renderTable();
+    });
+});
+
+// toggle tips
+if (showTipsToggle) {
+    showTipsToggle.addEventListener('change', () => {
+        tipsBlock.style.display = showTipsToggle.checked ? '' : 'none';
+        localStorage.setItem('showTips', showTipsToggle.checked ? '1' : '0');
+    });
+}
+
+// confirm delete
+if (confirmDeleteToggle) {
+    confirmDeleteToggle.addEventListener('change', () => {
+        confirmDelete = confirmDeleteToggle.checked;
+        localStorage.setItem('confirmDelete', confirmDelete ? '1' : '0');
+    });
+}
+
+// auto-save select
+if (autoSaveSelect) {
+    autoSaveSelect.addEventListener('change', () => {
+        const val = parseInt(autoSaveSelect.value, 10);
+        startAutoSave(val);
+        localStorage.setItem('autoSaveInterval', val);
+    });
+}
+
+// export format
+if (exportFormatSelect) {
+    exportFormatSelect.addEventListener('change', () => {
+        exportFormat = exportFormatSelect.value;
+        localStorage.setItem('exportFormat', exportFormat);
+    });
+}
+
+// font-size slider
+if (fontSizeSlider) {
+    fontSizeSlider.addEventListener('input', () => {
+        const val = parseInt(fontSizeSlider.value, 10) / 100;
+        setFontScale(val);
+        localStorage.setItem('fontScale', val);
+    });
+}
+
+// remember tab
+if (rememberTabToggle) {
+    rememberTabToggle.addEventListener('change', () => {
+        rememberTab = rememberTabToggle.checked;
+        localStorage.setItem('rememberTab', rememberTab ? '1' : '0');
+    });
+}
+
+// ------------ LOAD SETTINGS ----------------
+(function loadSettings() {
+    // auto-save
+    const savedAuto = parseInt(localStorage.getItem('autoSaveInterval') || '30000', 10);
+    autoSaveSelect.value = savedAuto;
+    startAutoSave(savedAuto);
+
+    // export format
+    exportFormat = localStorage.getItem('exportFormat') || 'xlsx';
+    exportFormatSelect.value = exportFormat;
+
+    // confirm delete
+    confirmDelete = localStorage.getItem('confirmDelete') !== '0';
+    confirmDeleteToggle.checked = confirmDelete;
+
+    // font scale
+    fontScale = parseFloat(localStorage.getItem('fontScale') || '1');
+    fontSizeSlider.value = Math.round(fontScale * 100);
+    setFontScale(fontScale);
+
+    // remember tab
+    rememberTab = localStorage.getItem('rememberTab') !== '0';
+    rememberTabToggle.checked = rememberTab;
+
+    // show tips
+    const showTips = localStorage.getItem('showTips') !== '0';
+    showTipsToggle.checked = showTips;
+    tipsBlock.style.display = showTips ? '' : 'none';
+
+    // column visibility
+    const cols = JSON.parse(localStorage.getItem('visibleColumns') || '{}');
+    visibleColumns = { ...visibleColumns, ...cols };
+    colToggles.forEach(chk => { chk.checked = visibleColumns[chk.value] !== false; });
+
+})();
+
+// ----------------- INIT --------------------
 loadDataFromLocal();
 
-setActiveTab(tabList);
+// restore last tab if remembered
+const lastTabId = localStorage.getItem('lastTab');
+if (rememberTab && lastTabId && document.getElementById(lastTabId)) {
+    setActiveTab(document.getElementById(lastTabId));
+} else {
+    setActiveTab(tabList);
+}
