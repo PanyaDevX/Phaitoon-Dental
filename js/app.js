@@ -71,7 +71,7 @@ const pagerInfo = $('#pager-info');
 
 // exports
 const exportBtn = $('#exportBtn');
-const exportCsvBtn = $('#exportCsv'); // kept for stats panel
+const exportCsvBtn = $('#exportCsv');
 
 // settings controls
 const autoSaveSelect = $('#autoSaveSelect');
@@ -82,6 +82,7 @@ const fontSizeValue = $('#fontSizeValue');
 const rememberTabToggle = $('#rememberTabToggle');
 const showTipsToggle = $('#showTipsToggle');
 const colToggles = $$('.col-toggle');
+const rowsPerPageSelect = $('#rowsPerPageSelect');
 
 // tips block
 const tipsBlock = document.querySelector('.sidebar ol');
@@ -461,6 +462,10 @@ if (rememberTabToggle) {
     autoSaveSelect.value = savedAuto;
     startAutoSave(savedAuto);
 
+    // rows per page
+    rowsPerPage = parseInt(localStorage.getItem('rowsPerPage') || '50', 10);
+    rowsPerPageSelect.value = rowsPerPage;
+
     // export format
     exportFormat = localStorage.getItem('exportFormat') || 'xlsx';
     exportFormatSelect.value = exportFormat;
@@ -489,6 +494,17 @@ if (rememberTabToggle) {
     colToggles.forEach(chk => { chk.checked = visibleColumns[chk.value] !== false; });
 
 })();
+
+if (rowsPerPageSelect) {
+    rowsPerPageSelect.addEventListener('change', () => {
+        rowsPerPage = parseInt(rowsPerPageSelect.value, 10);
+        localStorage.setItem('rowsPerPage', rowsPerPage);
+        currentPage = 1;
+        currentEditPage = 1;
+        renderTable();
+        renderEditTable();
+    });
+}
 
 // ----------------- INIT --------------------
 loadDataFromLocal();
