@@ -1,7 +1,3 @@
-// ==========================================
-//  Patient Management App – app.js (UPDATED)
-// ==========================================
-
 // ----------------- STATE ------------------
 let patientData = [];
 let rowsPerPage = 50;
@@ -516,3 +512,4 @@ if (rememberTab && lastTabId && document.getElementById(lastTabId)) {
 } else {
     setActiveTab(tabList);
 }
+
