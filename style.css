@@ -7,6 +7,7 @@
   --glass: rgba(255, 255, 255, 0.7);
   --radius: 12px;
   --shadow: 0 6px 18px rgba(12, 20, 30, 0.06);
+  --font-scale: 1;
 }
 
 * {
@@ -26,6 +27,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding: 28px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 /* App layout */
@@ -365,4 +367,229 @@ button,
 button:active,
 button:hover {
   filter: brightness(0.92)
+}
+
+/* Settings Page Styles */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.setting-group {
+  background: linear-gradient(180deg, #fff, #fbfdff);
+  border: 1px solid #eef6ff;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.setting-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.setting-icon {
+  font-family: "Segoe MDL2 Assets";
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.setting-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.setting-desc {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.setting-control {
+  width: 100%;
+  max-width: 280px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #e8f1ff;
+  background: linear-gradient(180deg, #fff, #fbfdff);
+  font-size: 14px;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.setting-slider {
+  flex: 1;
+  max-width: 280px;
+  height: 6px;
+  border-radius: 10px;
+  background: #eef6ff;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.setting-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(11, 115, 255, 0.3);
+}
+
+.setting-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(11, 115, 255, 0.3);
+}
+
+.slider-value {
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 50px;
+  text-align: right;
+}
+
+.setting-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.setting-checkbox.right input[type="checkbox"] {
+  order: 2;
+}
+
+.setting-checkbox input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid #d8edff;
+  border-radius: 6px;
+  background: white;
+  position: relative;
+  transition: 0.15s ease;
+  flex-shrink: 0;
+}
+
+.setting-checkbox input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(11, 115, 255, 0.25);
+}
+
+.setting-checkbox input[type="checkbox"]:checked::after {
+  content: '\E001';
+  font-family: "Segoe MDL2 Assets";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: normal;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.setting-checkbox input[type="checkbox"]:hover {
+  border-color: var(--accent);
+}
+
+.column-toggles input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid #d8edff;
+  border-radius: 6px;
+  background: white;
+  position: relative;
+  transition: 0.15s ease;
+  flex-shrink: 0;
+}
+
+.column-toggles input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(11, 115, 255, 0.25);
+}
+
+.column-toggles input[type="checkbox"]:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(11, 115, 255, 0.08);
+}
+
+.column-toggles input[type="checkbox"]:checked::after {
+  content: '\E001';
+  font-family: "Segoe MDL2 Assets";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: normal;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.checkbox-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.column-visibility {
+  background: linear-gradient(180deg, #f8fcff, #ffffff);
+}
+
+.column-toggles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.column-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: white;
+  border: 1px solid #eef6ff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: none;
+}
+
+.column-toggles label:hover {
+  background: #fbfdff;
+}
+
+@media (max-width: 520px) {
+  .column-toggles {
+    grid-template-columns: 1fr;
+  }
+  
+  .setting-control,
+  .slider-container {
+    max-width: 100%;
+  }
 }
